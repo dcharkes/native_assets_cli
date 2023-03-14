@@ -1,0 +1,21 @@
+publish_to: none
+
+name: native_assets_cli
+description: A library that contains the argument and file formats for implementing a native assets CLI.
+version: 0.1.0
+repository: https://github.com/dcharkes/native_assets_cli
+
+environment:
+  sdk: ">=2.19.3 <4.0.0"
+
+dependencies:
+  config:
+    git:
+      url: https://github.com/dcharkes/config.git
+      ref: a8059f7e7785a9411d915ac27d175059c822b54d
+  yaml: ^3.1.1
+  yaml_edit: ^2.1.0
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
