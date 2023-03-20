@@ -6,7 +6,6 @@ import 'dart:io';
 
 import 'package:config/config.dart';
 import 'package:native_assets_cli/native_assets_cli.dart';
-import 'package:native_assets_cli/src/model/packaging_preference.dart';
 import 'package:test/test.dart';
 
 void main() async {
@@ -29,6 +28,7 @@ void main() async {
   test('NativeAssetsCliConfig ==', () {
     final nativeAssetsCliConfig1 = NativeAssetsCliConfig(
       outDir: tempUri.resolve('out1/'),
+      packageRoot: tempUri,
       target: Target.iOSArm64,
       targetIOSSdk: IOSSdk.iPhoneOs,
       cc: fakeClang,
@@ -38,6 +38,7 @@ void main() async {
 
     final nativeAssetsCliConfig2 = NativeAssetsCliConfig(
       outDir: tempUri.resolve('out2/'),
+      packageRoot: tempUri,
       target: Target.androidArm64,
       packaging: PackagingPreference.preferStatic,
     );
@@ -49,12 +50,14 @@ void main() async {
   test('NativeAssetsCliConfig fromConfig', () {
     final nativeAssetsCliConfig2 = NativeAssetsCliConfig(
       outDir: tempUri.resolve('out2/'),
+      packageRoot: tempUri.resolve('packageRoot/'),
       target: Target.androidArm64,
       packaging: PackagingPreference.preferStatic,
     );
 
     final config = Config(fileParsed: {
       'out_dir': tempUri.resolve('out2/').path,
+      'package_root': tempUri.resolve('packageRoot/').path,
       'target': 'android_arm64',
       'packaging': 'prefer-static',
     });
@@ -66,6 +69,7 @@ void main() async {
   test('NativeAssetsCliConfig toYamlEncoding fromConfig', () {
     final nativeAssetsCliConfig1 = NativeAssetsCliConfig(
       outDir: tempUri.resolve('out1/'),
+      packageRoot: tempUri.resolve('packageRoot/'),
       target: Target.iOSArm64,
       targetIOSSdk: IOSSdk.iPhoneOs,
       cc: fakeClang,

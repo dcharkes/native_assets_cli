@@ -14,6 +14,13 @@ class NativeAssetsCliConfig {
   Uri get outDir => _outDir;
   late final Uri _outDir;
 
+  /// The root of the package the native assets are built for.
+  ///
+  /// Often a package's native assets are built because a package is a
+  /// dependency of another. For this it is convenient to know the packageRoot.
+  Uri get packageRoot => _packageRoot;
+  late final Uri _packageRoot;
+
   /// The target that is being compiled for.
   Target get target => _target;
   late final Target _target;
@@ -38,6 +45,7 @@ class NativeAssetsCliConfig {
 
   factory NativeAssetsCliConfig({
     required Uri outDir,
+    required Uri packageRoot,
     required Target target,
     IOSSdk? targetIOSSdk,
     Uri? cc,
@@ -46,6 +54,7 @@ class NativeAssetsCliConfig {
   }) {
     final nonValidated = NativeAssetsCliConfig._()
       .._outDir = outDir
+      .._packageRoot = packageRoot
       .._target = target
       .._targetIOSSdk = targetIOSSdk
       .._cc = cc
@@ -81,11 +90,13 @@ class NativeAssetsCliConfig {
   }
 
   static const outDirConfigKey = 'out_dir';
+  static const packageRootConfigKey = 'package_root';
   static const ccConfigKey = 'cc';
   static const ldConfigKey = 'ld';
 
   List<void Function(Config)> _readFieldsFromConfig() => [
         (config) => _outDir = config.getPath(outDirConfigKey),
+        (config) => _packageRoot = config.getPath(packageRootConfigKey),
         (config) => _target = Target.fromString(
               config.getString(
                 Target.configKey,
@@ -112,6 +123,7 @@ class NativeAssetsCliConfig {
 
   Map<String, Object> toYamlEncoding() => {
         outDirConfigKey: _outDir.path,
+        packageRootConfigKey: _packageRoot.path,
         Target.configKey: _target.toString(),
         if (_targetIOSSdk != null) IOSSdk.configKey: _targetIOSSdk.toString(),
         if (_cc != null) ccConfigKey: _cc!.path,
@@ -125,6 +137,7 @@ class NativeAssetsCliConfig {
       return false;
     }
     if (other._outDir != _outDir) return false;
+    if (other._packageRoot != _packageRoot) return false;
     if (other._target != _target) return false;
     if (other._targetIOSSdk != _targetIOSSdk) return false;
     if (other._cc != _cc) return false;
@@ -135,7 +148,8 @@ class NativeAssetsCliConfig {
 
   @override
   int get hashCode =>
-      _outDir.path.hashCode ^
+      _outDir.hashCode ^
+      _packageRoot.hashCode ^
       _target.hashCode ^
       _targetIOSSdk.hashCode ^
       _cc.hashCode ^

@@ -30,6 +30,7 @@ void main() async {
       [
         'bin/native.dart',
         '-Dout_dir=${tempUri.path}',
+        '-Dpackage_root=${testPackageUri.path}',
         '-Dtarget=linux_x64',
         '-Dpackaging=dynamic',
       ],

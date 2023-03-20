@@ -22,13 +22,12 @@ void main(List<String> args) async {
       await Config.fromArgs(args: args, environment: Platform.environment);
   final nativeAssetsConfig = NativeAssetsCliConfig.fromConfig(config);
   final outDir = nativeAssetsConfig.outDir;
-  print(outDir);
+  final packageRoot = nativeAssetsConfig.packageRoot;
   await Directory.fromUri(outDir).create(recursive: true);
   final packaging = nativeAssetsConfig.packaging.preferredPackaging.first;
   final libUri = outDir.resolve(
       nativeAssetsConfig.target.os.libraryFileName(packageName, packaging));
-  final packageUri = Directory.current.uri;
-  final sources = [for (final path in sourcePaths) packageUri.resolve(path)];
+  final sources = [for (final path in sourcePaths) packageRoot.resolve(path)];
 
   final task = CBuilder(
     config: config,
@@ -51,7 +50,7 @@ void main(List<String> args) async {
 
   final dependencies = Dependencies([
     ...sources,
-    packageUri.resolve('bin/native.dart'),
+    packageRoot.resolve('bin/native.dart'),
   ]);
   final dependenciesUri = outDir.resolve('dependencies.yaml');
   await File.fromUri(dependenciesUri).writeAsString(dependencies.toYaml());
