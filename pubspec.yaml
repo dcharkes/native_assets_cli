@@ -9,6 +9,7 @@ environment:
   sdk: ">=2.19.3 <4.0.0"
 
 dependencies:
+  collection: ^1.17.1
   config:
     git:
       url: https://github.com/dcharkes/config.git

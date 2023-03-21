@@ -5,6 +5,7 @@
 import 'package:yaml/yaml.dart';
 
 import '../utils/list.dart';
+import '../utils/map.dart';
 import '../utils/yaml.dart';
 import 'asset.dart';
 
@@ -32,7 +33,7 @@ class BuiltInfo {
   Map<String, Object> toYamlEncoding() => {
         _timestampKey: timestamp.toString(),
         _assetsKey: assets.toYamlEncoding(),
-      };
+      }..sortOnKey();
 
   String toYaml() => toYamlString(toYamlEncoding());
 

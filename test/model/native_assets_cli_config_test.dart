@@ -82,4 +82,80 @@ void main() async {
     final fromConfig = NativeAssetsCliConfig.fromConfig(config);
     expect(fromConfig, equals(nativeAssetsCliConfig1));
   });
+
+  test('NativeAssetsCliConfig == dependency metadata', () {
+    final nativeAssetsCliConfig1 = NativeAssetsCliConfig(
+      outDir: tempUri.resolve('out1/'),
+      packageRoot: tempUri,
+      target: Target.androidArm64,
+      packaging: PackagingPreference.preferStatic,
+      dependencyMetadata: {
+        'bar': {
+          'key': 'value',
+          'foo': ['asdf', 'fdsa'],
+        },
+        'foo': {
+          'key': 321,
+        },
+      },
+    );
+
+    final nativeAssetsCliConfig2 = NativeAssetsCliConfig(
+      outDir: tempUri.resolve('out1/'),
+      packageRoot: tempUri,
+      target: Target.androidArm64,
+      packaging: PackagingPreference.preferStatic,
+      dependencyMetadata: {
+        'bar': {
+          'key': 'value',
+        },
+        'foo': {
+          'key': 123,
+        },
+      },
+    );
+
+    expect(nativeAssetsCliConfig1, equals(nativeAssetsCliConfig1));
+    expect(nativeAssetsCliConfig1 == nativeAssetsCliConfig2, false);
+  });
+
+  test('NativeAssetsCliConfig toYaml', () {
+    final outDir = tempUri.resolve('out1/');
+    final nativeAssetsCliConfig1 = NativeAssetsCliConfig(
+      outDir: outDir,
+      packageRoot: tempUri,
+      target: Target.iOSArm64,
+      targetIOSSdk: IOSSdk.iPhoneOs,
+      cc: fakeClang,
+      ld: fakeLd,
+      packaging: PackagingPreference.preferStatic,
+      // This map should be sorted on key for two layers.
+      dependencyMetadata: {
+        'foo': {
+          'z': ['z', 'a'],
+          'a': 321,
+        },
+        'bar': {
+          'key': 'value',
+        },
+      },
+    );
+    final yamlString = nativeAssetsCliConfig1.toYaml();
+    final expectedYamlString = '''cc: ${fakeClang.path}
+dependency_metadata:
+  bar:
+    key: value
+  foo:
+    a: 321
+    z:
+      - z
+      - a
+ld: ${fakeLd.path}
+out_dir: ${outDir.path}
+package_root: ${tempUri.path}
+packaging: prefer-static
+target: ios_arm64
+target_ios_sdk: iphoneos''';
+    expect(yamlString, equals(expectedYamlString));
+  });
 }

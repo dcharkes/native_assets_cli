@@ -2,8 +2,12 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'package:collection/collection.dart';
 import 'package:config/config.dart';
 
+import '../utils/hashcode.dart';
+import '../utils/map.dart';
+import '../utils/yaml.dart';
 import 'ios_sdk.dart';
 import 'packaging_preference.dart';
 import 'target.dart';
@@ -43,6 +47,15 @@ class NativeAssetsCliConfig {
   PackagingPreference get packaging => _packaging;
   late final PackagingPreference _packaging;
 
+  /// Metadata from direct dependencies.
+  ///
+  /// The key in the map is the package name of the dependency.
+  ///
+  /// The key in the nested map is the key for the metadata from the dependency.
+  Map<String, Map<String, Object>>? get dependencyMetadata =>
+      _dependencyMetadata;
+  late final Map<String, Map<String, Object>>? _dependencyMetadata;
+
   factory NativeAssetsCliConfig({
     required Uri outDir,
     required Uri packageRoot,
@@ -51,6 +64,7 @@ class NativeAssetsCliConfig {
     Uri? cc,
     Uri? ld,
     required PackagingPreference packaging,
+    Map<String, Map<String, Object>>? dependencyMetadata,
   }) {
     final nonValidated = NativeAssetsCliConfig._()
       .._outDir = outDir
@@ -59,7 +73,8 @@ class NativeAssetsCliConfig {
       .._targetIOSSdk = targetIOSSdk
       .._cc = cc
       .._ld = ld
-      .._packaging = packaging;
+      .._packaging = packaging
+      .._dependencyMetadata = dependencyMetadata;
     final parsedConfigFile = nonValidated.toYamlEncoding();
     final config = Config(fileParsed: parsedConfigFile);
     return NativeAssetsCliConfig.fromConfig(config);
@@ -93,6 +108,7 @@ class NativeAssetsCliConfig {
   static const packageRootConfigKey = 'package_root';
   static const ccConfigKey = 'cc';
   static const ldConfigKey = 'ld';
+  static const dependencyMetadataConfigKey = 'dependency_metadata';
 
   List<void Function(Config)> _readFieldsFromConfig() => [
         (config) => _outDir = config.getPath(outDirConfigKey),
@@ -119,7 +135,43 @@ class NativeAssetsCliConfig {
                 validValues: PackagingPreference.values.map((e) => '$e'),
               ),
             ),
+        (config) =>
+            _dependencyMetadata = _readDependencyMetadataFromConfig(config)
       ];
+
+  Map<String, Map<String, Object>>? _readDependencyMetadataFromConfig(
+      Config config) {
+    final fileValue =
+        config.getFileValue<Map<String, Object>>(dependencyMetadataConfigKey);
+    if (fileValue == null) {
+      return null;
+    }
+    final result = <String, Map<String, Object>>{};
+    for (final entry in fileValue.entries) {
+      final packageName = entry.key;
+      final defines = entry.value;
+      if (defines is! Map) {
+        throw FormatException(
+            "Unexpected value '$defines' for key '$dependencyMetadataConfigKey.$packageName' in config file. Expected a Map.");
+      }
+      final packageResult = <String, Object>{};
+      for (final entry2 in defines.entries) {
+        final key = entry2.key;
+        if (key is! String) {
+          throw FormatException(
+              "Unexpected key '$key' in '$dependencyMetadataConfigKey.$packageName' in config file. Expected a String.");
+        }
+        final value = entry2.value;
+        if (value == null) {
+          throw FormatException(
+              "Unexpected value '$value' for key '$dependencyMetadataConfigKey.$packageName.$key' in config file. Expected a non-null value.");
+        }
+        packageResult[key] = value;
+      }
+      result[packageName] = packageResult.sortOnKey();
+    }
+    return result.sortOnKey();
+  }
 
   Map<String, Object> toYamlEncoding() => {
         outDirConfigKey: _outDir.path,
@@ -129,7 +181,11 @@ class NativeAssetsCliConfig {
         if (_cc != null) ccConfigKey: _cc!.path,
         if (_ld != null) ldConfigKey: _ld!.path,
         PackagingPreference.configKey: _packaging.toString(),
-      };
+        if (_dependencyMetadata != null)
+          dependencyMetadataConfigKey: _dependencyMetadata!,
+      }.sortOnKey();
+
+  String toYaml() => toYamlString(toYamlEncoding());
 
   @override
   bool operator ==(Object other) {
@@ -143,9 +199,12 @@ class NativeAssetsCliConfig {
     if (other._cc != _cc) return false;
     if (other._ld != _ld) return false;
     if (other._packaging != _packaging) return false;
+    if (!DeepCollectionEquality()
+        .equals(other._dependencyMetadata, _dependencyMetadata)) return false;
     return true;
   }
 
+  // Ordering of fields doesn't matter.
   @override
   int get hashCode =>
       _outDir.hashCode ^
@@ -154,7 +213,8 @@ class NativeAssetsCliConfig {
       _targetIOSSdk.hashCode ^
       _cc.hashCode ^
       _ld.hashCode ^
-      _packaging.hashCode;
+      _packaging.hashCode ^
+      DeepCollectionhash().hash(_dependencyMetadata);
 
   @override
   String toString() => 'NativeAssetsCliConfig(${toYamlEncoding()})';
