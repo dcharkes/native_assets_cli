@@ -12,17 +12,14 @@ dependencies:
   cc:
     git:
       url: https://github.com/dcharkes/cc.git
-      ref: 5f6a3c8d5248648b21a66788438f39bf8629d7cb
+      ref: 45e3dfe92c7f2aafb8fc6a0c480e2d20c25cb97c
   config:
     git:
       url: https://github.com/dcharkes/config.git
       ref: a8059f7e7785a9411d915ac27d175059c822b54d
+  logging: ^1.1.1
   native_assets_cli:
     path: ../../
-  task_runner:
-    git:
-      url: https://github.com/dcharkes/task_runner.git
-      ref: 23a378bf4fac090fe9c46a07daf32945c598ef4a
 
 dev_dependencies:
   ffigen: ^7.2.8

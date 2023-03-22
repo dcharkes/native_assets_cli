@@ -6,8 +6,8 @@ import 'dart:io';
 
 import 'package:cc/cc.dart';
 import 'package:config/config.dart';
+import 'package:logging/logging.dart';
 import 'package:native_assets_cli/native_assets_cli.dart';
-import 'package:task_runner/task_runner.dart';
 
 const packageName = 'native_add';
 const assetName =
@@ -17,7 +17,7 @@ const sourcePaths = [
 ];
 
 void main(List<String> args) async {
-  final taskRunner = TaskRunner();
+  final logger = Logger('');
   final config =
       await Config.fromArgs(args: args, environment: Platform.environment);
   final nativeAssetsConfig = NativeAssetsCliConfig.fromConfig(config);
@@ -31,11 +31,12 @@ void main(List<String> args) async {
 
   final task = CBuilder(
     config: config,
+    logger: logger,
     sources: sources,
     dynamicLibrary: packaging == Packaging.dynamic ? libUri : null,
     staticLibrary: packaging == Packaging.static ? libUri : null,
   );
-  await task.run(taskRunner: taskRunner);
+  await task.run();
 
   final builtInfo = BuiltInfo(timestamp: DateTime.now(), assets: [
     Asset(
